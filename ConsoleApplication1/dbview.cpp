@@ -104,20 +104,167 @@ ANSI_Util au2;
 
 #define LOG(...) ANSI_Util::OutputDebugStringV(__VA_ARGS__)
 
+#include <iostream>
+#include <thread>
 
+int lpos = 1, numlines = 2;
+//int start = lpos, finish = 0;
+
+int crap;
+using namespace std;
+
+#define OFFSET 2
+
+void stest(vector<string> &vec, int start)
+{
+	auto szVec = vec.size();
+	int last_starting = start;
+	//int cnt = 0;
+	//for (auto s :vec )
+	for(auto it=(vec.begin()+ (start-1));it!=vec.end();it++)
+	{
+		if (last_starting > numlines) //window filled, should scrill
+		{
+			Beep(450, 300);
+		//	cin >> crap; //pause here
+			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+			printf(CSI_DEF "2J"); // Clear screen						 
+		//delete everything
+			//
+			au2.CurPos(CURSOR_SAVE);
+			au2.CurPos(10, 1);
+			printf("start:%d", start);
+			au2.CurPos(CURSOR_RESTORE);
+			stest(vec, start + 1 );
+			break;
+		}
+		else
+		{
+			au2.CurPos(last_starting, 1);
+			printf("%s%d", it->c_str(),last_starting);
+			last_starting++;
+		}
+	}
+
+}
+
+void stest2(vector<string> &vec, int start)
+{
+
+}
+
+
+
+void printAndAvance(vector<string> &vec,int advancePos, int scrollStartLine, int winsize)
+{
+	//int winsize = 2;
+
+	int topofwin =0;
+	int bottomwin=0 ;
+
+	printf(CSI_DEF "2J"); // Clear screen		
+	au2.CurPos(scrollStartLine, 1);
+
+	topofwin = advancePos;
+	bottomwin = topofwin + winsize;
+
+
+		for (int i = topofwin; i < bottomwin && i < vec.size(); i++)
+		{
+			au2.CurPos(scrollStartLine++, 1);
+			printf("%s", vec[i].c_str());
+
+		}
+
+
+}
+
+void pushBuffString(vector<string> & vec, string s, int scrollStartLine, int winsize, bool autoScroll=true)
+{
+	vec.push_back(s);
+	int sz = vec.size();
+	
+	auto cntWindows =(int)ceil(( (float)sz / (float)winsize) );
+	
+	//printf(CURSOR_SAVE);
+	//au2.CurPos(10, 10);
+	//au2.PrintAndRestore(10,10,"cnt:%d", cntWindows);
+	//printf("cnt:%d", cntWindows);
+	//printf(CURSOR_RESTORE);
+	if(autoScroll)
+		printAndAvance(vec, cntWindows, scrollStartLine, winsize);
+
+
+}
 
 int __cdecl main()
 {
 	//testANSI();
 	au2.EnableVTMode();
-	au2.AddLoc("one", 1, 1);
-	au2.StoreScrollingRegionLocation("scroll1", 2, 3);
-	au2.SetScrollingRegion("scroll1");
+	std::vector<std::string> vec;
+
+	char temp[333];
+	sprintf(temp, "\033[%d;%dr", 1, 3);
+	printf(temp);
+
+	vec.push_back("one");
+	vec.push_back("two");
+	vec.push_back("three");
+	vec.push_back("four");
+
+	int x = 0;
+
+	//while (x<4)
+	//{
+	//	printAndAvance(vec,x++,1,2);
+	//	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+	//}
+	int pos = 0;
+	printAndAvance(vec, 0, 1, 2);
 	
-	au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "%s", "one");
-	au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "two");
-	au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "three");
-	au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "four");
+
+	au2.AddLoc("input1", 10, 10);
+
+	while (1)
+	{
+
+
+		switch (au2.GetPressedKey(true))
+		{
+		case VK_UP:
+			printAndAvance(vec, --pos, 1, 2);
+			break;
+
+		case VK_DOWN:
+			printAndAvance(vec, ++pos, 1, 2);
+			break;
+
+		case VK_RIGHT:
+			au2.GetInputAtLocation("input1", temp,10);
+			pushBuffString(vec, temp, 1,2, true);
+			break;
+		}
+	}
+
+//	pushBuffString(vec, "five", 1, 2, true);
+	printf("\n");
+	//printAndAvance(vec, 3, 1, 2);
+	//pushBuffString(vec, "six", 1, 2, true);
+
+	
+	//stest(vec, lpos);
+	//printf("\n");
+
+
+	//au2.AddLoc("one", 1, 1);
+	//au2.StoreScrollingRegionLocation("scroll1", 2, 3);
+	//au2.SetScrollingRegion("scroll1");
+	//
+	//au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "%s", "one");
+	//au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "two");
+	//au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "three");
+	//au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "four");
 //	au2.FillScrollingRegion("scroll1");
 	//au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "%s", "three");
 	//au2.ScrollDown("scroll1");
