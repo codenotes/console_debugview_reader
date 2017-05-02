@@ -111,17 +111,20 @@ int __cdecl main()
 	//testANSI();
 	au2.EnableVTMode();
 	au2.AddLoc("one", 1, 1);
-	au2.StoreScrollingRegionLocation("scroll1", 2, 15);
+	au2.StoreScrollingRegionLocation("scroll1", 2, 3);
 	au2.SetScrollingRegion("scroll1");
 	
 	au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "%s", "one");
-	//au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "two");
-	//au2.FillScrollingRegion("scroll1");
+	au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "two");
+	au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "three");
+	au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "four");
+//	au2.FillScrollingRegion("scroll1");
 	//au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "%s", "three");
+	//au2.ScrollDown("scroll1");
 	//au2.FillScrollingRegion("scroll1");
 	//au2.ScrollDown("scroll1");
 	//return 0;
-
+	return 0;
 	DWORD dwLastError = ERROR_SUCCESS;
 
 	IfFalseRet(SetConsoleCtrlHandler((PHANDLER_ROUTINE)(CtrlHandler), TRUE) == TRUE);
@@ -159,21 +162,21 @@ int __cdecl main()
 	CDBWinBuffer* pDbgBuffer = (CDBWinBuffer*)(MapViewOfFile(
 		hFileMappingBuffer, SECTION_MAP_READ, 0, 0, 0));
 	IfFalseRet(pDbgBuffer);
-	
+	int i = 0;
 	while (g_fContinue)
 	{
 		if (WaitForSingleObject(hEventDataReady, 100) == WAIT_OBJECT_0)
 		{
-			au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::BOLDCYAN, "%s", (const char*)pDbgBuffer->abData);
+			au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::BOLDCYAN, "%d", i++);// , (const char*)pDbgBuffer->abData);
 //			au2.PrintAtLoc("one", ANSI_Util::BOLDCYAN, "%s", (const char*)pDbgBuffer->abData);
 	//		au2.CurPos(20, 1);
 		//	printf("%s", pDbgBuffer->abData);
 			
 			SetEvent(hEventBufferReady);
+//			au2.FillScrollingRegion("scroll1");
+//			au2.ScrollDown("scroll1");
 			au2.FillScrollingRegion("scroll1");
 			au2.ScrollDown("scroll1");
-	//		au2.FillScrollingRegion("scroll1");
-		//	au2.ScrollDown("scroll1");
 		}
 	}
 
