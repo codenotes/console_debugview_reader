@@ -155,47 +155,61 @@ void stest2(vector<string> &vec, int start)
 
 
 
-void printAndAvance(vector<string> &vec,int advancePos, int scrollStartLine, int winsize)
+bool printAndAvance(vector<string> &vec,int advancePos, int scrollStartLine, int winsize)
 {
 	//int winsize = 2;
-
+	if (advancePos < 0)
+	{
+		Beep(450, 300);
+		return false;
+	}
 	int topofwin =0;
 	int bottomwin=0 ;
 
 	printf(CSI_DEF "2J"); // Clear screen		
-	au2.CurPos(scrollStartLine, 1);
+	//au2.CurPos(scrollStartLine, 1);
 
 	topofwin = advancePos;
 	bottomwin = topofwin + winsize;
+	int sz = vec.size();
+	int i = 0;
 
+	for (i = topofwin; (i < bottomwin) && (i < sz); i++)
+	{
+		au2.CurPos(scrollStartLine++, 1);
+		printf("%s", vec[i].c_str());
+	}
 
-		for (int i = topofwin; i < bottomwin && i < vec.size(); i++)
-		{
-			au2.CurPos(scrollStartLine++, 1);
-			printf("%s", vec[i].c_str());
-
-		}
-
-
+	return true;
 }
+#define WINSIZE 4
 
-void pushBuffString(vector<string> & vec, string s, int scrollStartLine, int winsize, bool autoScroll=true)
+bool pushBuffString(vector<string> & vec, string s, int scrollStartLine, int winsize, bool autoScroll=true)
 {
 	vec.push_back(s);
 	int sz = vec.size();
 	
-	auto cntWindows =(int)ceil(( (float)sz / (float)winsize) );
+	auto cntWindows =(int)floor(( (float)sz / (float)winsize) );
 	
+
+	//what top and bottom positions the window on the lest N elements of array
+
+
 	//printf(CURSOR_SAVE);
 	//au2.CurPos(10, 10);
 	//au2.PrintAndRestore(10,10,"cnt:%d", cntWindows);
 	//printf("cnt:%d", cntWindows);
 	//printf(CURSOR_RESTORE);
+
+	//what is the position on the top of the Nth window?
+	//auto pos = cntWindows*winsize;
+
 	if(autoScroll)
-		printAndAvance(vec, cntWindows, scrollStartLine, winsize);
+		return printAndAvance(vec,cntWindows,scrollStartLine, winsize);
 
 
 }
+
 
 int __cdecl main()
 {
@@ -212,6 +226,7 @@ int __cdecl main()
 	vec.push_back("three");
 	vec.push_back("four");
 
+
 	int x = 0;
 
 	//while (x<4)
@@ -221,28 +236,37 @@ int __cdecl main()
 
 	//}
 	int pos = 0;
-	printAndAvance(vec, 0, 1, 2);
+	printAndAvance(vec, 0, 1, WINSIZE);
 	
 
 	au2.AddLoc("input1", 10, 10);
-
+	int adder = 0;
 	while (1)
 	{
 
 
 		switch (au2.GetPressedKey(true))
 		{
+		case VK_LEFT:
+			vec.push_back("five");
+			printAndAvance(vec, 2, 1, WINSIZE);
+			break;
+
 		case VK_UP:
-			printAndAvance(vec, --pos, 1, 2);
+			printAndAvance(vec, --pos, 1, WINSIZE);
 			break;
 
 		case VK_DOWN:
-			printAndAvance(vec, ++pos, 1, 2);
+			printAndAvance(vec, ++pos, 1, WINSIZE);
 			break;
 
 		case VK_RIGHT:
-			au2.GetInputAtLocation("input1", temp,10);
-			pushBuffString(vec, temp, 1,2, true);
+			//au2.GetInputAtLocation("input1", temp,10);
+			//pushBuffString(vec, "greg", 1,2, true);
+			sprintf(temp, "added:%d", adder++);
+			pushBuffString(vec, temp, 1, 2, false);
+			printAndAvance(vec, ++pos, 1, WINSIZE);
+			
 			break;
 		}
 	}
