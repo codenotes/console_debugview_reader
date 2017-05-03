@@ -174,15 +174,21 @@ bool printAndAvance(vector<string> &vec,int advancePos, int scrollStartLine, int
 	int sz = vec.size();
 	int i = 0;
 
-	for (i = topofwin; (i < bottomwin) && (i < sz); i++)
+	for (i = topofwin; (i < bottomwin) /*&& (i < sz)*/; i++)
 	{
 		au2.CurPos(scrollStartLine++, 1);
-		printf("%s", vec[i].c_str());
+
+		if (i < sz)
+			printf("%s", vec[i].c_str());
+		else
+			printf("---");
 	}
+
+
 
 	return true;
 }
-#define WINSIZE 4
+#define WINSIZE 6
 
 bool pushBuffString(vector<string> & vec, string s, int scrollStartLine, int winsize, bool autoScroll=true)
 {
@@ -266,6 +272,7 @@ int __cdecl main()
 			sprintf(temp, "added:%d", adder++);
 			pushBuffString(vec, temp, 1, 2, false);
 			printAndAvance(vec, ++pos, 1, WINSIZE);
+		//	pos++;
 			
 			break;
 		}
