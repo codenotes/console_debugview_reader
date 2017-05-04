@@ -5,8 +5,8 @@
 #include <Windows.h>
 #include <stdio.h>
 
-
-
+#define WINSIZE 6
+#define STARTING_LINE 2
 #define IfFalseRet(c) do{if(!(c)){return dwLastError = ::GetLastError();}}while(false)
 
 class CHandle
@@ -154,46 +154,73 @@ void stest2(vector<string> &vec, int start)
 }
 
 
-
 bool printAndAvance(vector<string> &vec,int advancePos, int scrollStartLine, int winsize)
 {
 	//int winsize = 2;
 	if (advancePos < 0)
 	{
-		Beep(450, 300);
+		Beep(450, 50);
 		return false;
 	}
 	int topofwin =0;
 	int bottomwin=0 ;
+	int sz = vec.size();
 
-	printf(CSI_DEF "2J"); // Clear screen		
+	//printf(CSI_DEF "2J"); // Clear screen		
+
+	//printf(CURSOR_SAVE);
 	//au2.CurPos(scrollStartLine, 1);
 
-	topofwin = advancePos;
+	//for (int j = 0; j <= winsize; j++)
+	//{
+	//	printf("\n--");
+	//}
+	//printf(CURSOR_RESTORE);
+
+
+	//au2.CurPos(scrollStartLine, 1);
+
+	//old issue
+	//it is advancing the string and scrolling the vector BEFORE reaching the end of the window.
+	//that is the issue.  Change is, do NOT advance topwin UNLESS the buffer is filled.
+	//check: do we have less to print than our window size is? If so, set topwin to 0
+
+	if (sz <= winsize)
+	{
+		topofwin = 0;// scrollStartLine;
+	}
+	else
+	{
+		topofwin = advancePos;
+
+	}
+
 	bottomwin = topofwin + winsize;
-	int sz = vec.size();
 	int i = 0;
 
+	
 	for (i = topofwin; (i < bottomwin) /*&& (i < sz)*/; i++)
 	{
 		au2.CurPos(scrollStartLine++, 1);
-
-		if (i < sz)
+		printf(DL);
+		if (i < sz) 
+			//printf("%s-sl:%d", vec[i].c_str(),scrollStartLine);
 			printf("%s", vec[i].c_str());
 		else
-			printf("---");
+			;//		printf("---");
 	}
 
 
 
 	return true;
 }
-#define WINSIZE 6
+
 
 bool pushBuffString(vector<string> & vec, string s, int scrollStartLine, int winsize, bool autoScroll=true)
 {
 	vec.push_back(s);
 	int sz = vec.size();
+	static int  lastpos = 0;
 	
 	auto cntWindows =(int)floor(( (float)sz / (float)winsize) );
 	
@@ -210,28 +237,39 @@ bool pushBuffString(vector<string> & vec, string s, int scrollStartLine, int win
 	//what is the position on the top of the Nth window?
 	//auto pos = cntWindows*winsize;
 
-	if(autoScroll)
-		return printAndAvance(vec,cntWindows,scrollStartLine, winsize);
+	//if (autoScroll)
+	//{
+	//	//get size and pass that in as pos
+	//	return printAndAvance(vec, lastpos++, scrollStartLine, winsize);
+	//}
 
-
+	return true;
 }
 
 
-int __cdecl main()
+void testansi2()
 {
-	//testANSI();
 	au2.EnableVTMode();
 	std::vector<std::string> vec;
 
 	char temp[333];
-	sprintf(temp, "\033[%d;%dr", 1, 3);
+	sprintf(temp, "\033[%d;%dr", STARTING_LINE, WINSIZE + 1); //seems to be inclusive, so added 1
 	printf(temp);
+
+
+	//pushBuffString(vec, temp, STARTING_LINE, WINSIZE, false);
 
 	vec.push_back("one");
 	vec.push_back("two");
 	vec.push_back("three");
 	vec.push_back("four");
+	//	vec.push_back("five");
+	//	vec.push_back("six");
 
+	//vec.push_back("one");
+	//vec.push_back("two");
+	//vec.push_back("three");
+	//vec.push_back("four");
 
 	int x = 0;
 
@@ -242,44 +280,85 @@ int __cdecl main()
 
 	//}
 	int pos = 0;
-	printAndAvance(vec, 0, 1, WINSIZE);
-	
+	printAndAvance(vec, 0, STARTING_LINE, WINSIZE);
+
 
 	au2.AddLoc("input1", 10, 10);
 	int adder = 0;
 	while (1)
 	{
-
-
 		switch (au2.GetPressedKey(true))
 		{
 		case VK_LEFT:
 			vec.push_back("five");
-			printAndAvance(vec, 2, 1, WINSIZE);
+			printAndAvance(vec, 2, STARTING_LINE, WINSIZE);
 			break;
 
 		case VK_UP:
-			printAndAvance(vec, --pos, 1, WINSIZE);
+			printAndAvance(vec, --pos, STARTING_LINE, WINSIZE);
 			break;
 
 		case VK_DOWN:
-			printAndAvance(vec, ++pos, 1, WINSIZE);
+			printAndAvance(vec, ++pos, STARTING_LINE, WINSIZE);
 			break;
 
 		case VK_RIGHT:
 			//au2.GetInputAtLocation("input1", temp,10);
 			//pushBuffString(vec, "greg", 1,2, true);
 			sprintf(temp, "added:%d", adder++);
-			pushBuffString(vec, temp, 1, 2, false);
-			printAndAvance(vec, ++pos, 1, WINSIZE);
-		//	pos++;
-			
+			pushBuffString(vec, temp, STARTING_LINE, WINSIZE, false);
+			printAndAvance(vec, pos++, STARTING_LINE, WINSIZE);
+			//	pos++;
+
 			break;
 		}
 	}
 
-//	pushBuffString(vec, "five", 1, 2, true);
+	//	pushBuffString(vec, "five", 1, 2, true);
 	printf("\n");
+}
+
+
+
+int __cdecl main()
+{
+
+	ANSI_Util term;
+	char temp[255];
+	term.StoreScrollingRegionLocation("scroll1", 2, 4 ); //4 lines, adding 1 because seems to be necessary
+	term.SetScrollingRegion("scroll1");
+
+	term.pushBuffString("scroll1", "one");
+	term.pushBuffString("scroll1", "two");
+	term.pushBuffString("scroll1", "three");
+	term.pushBuffString("scroll1", "four");
+	term.pushBuffString("scroll1", "five");
+
+	int xx = 0;
+	int pos = 0;
+	while (1)
+	{
+		switch (term.GetPressedKey(true))
+		{
+
+		case VK_LEFT:
+			break;
+		case VK_UP:
+			term.ScrollUp("scroll1");// , ++pos);
+			break;
+		case VK_DOWN:
+			term.ScrollDown("scroll1");// , --pos);
+			break;
+		case VK_RIGHT:
+			sprintf(temp, "pushed:%d", xx++);
+			term.pushBuffString("scroll1",temp);
+
+			break;
+		}
+	}
+
+	//testANSI();
+
 	//printAndAvance(vec, 3, 1, 2);
 	//pushBuffString(vec, "six", 1, 2, true);
 
