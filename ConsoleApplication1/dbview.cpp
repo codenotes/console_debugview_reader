@@ -319,20 +319,58 @@ void testansi2()
 }
 
 
+void getConsoleWidthAndHeight(int &columns, int&rows)
+{
+
+#ifdef _WIN32
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+	columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+	rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+#else
+//#include <sys/ioctl.h>
+//#include <stdio.h>
+//#include <unistd.h>
+	struct winsize w;
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+#endif
+	
+	return;
+}
+
+
+
+//printf("\033[%d;%dH", L, N);
+
+
+
 
 int __cdecl main()
 {
 
 	ANSI_Util term;
+
 	char temp[255];
 	term.StoreScrollingRegionLocation("scroll1", 2, 4 ); //4 lines, adding 1 because seems to be necessary
 	term.SetScrollingRegion("scroll1");
+
+	term.drawHline(6);
+	term.drawVline(12, 0,7);
 
 	term.pushBuffString("scroll1", "one");
 	term.pushBuffString("scroll1", "two");
 	term.pushBuffString("scroll1", "three");
 	term.pushBuffString("scroll1", "four");
 	term.pushBuffString("scroll1", "five");
+
+	term.CurPos(10, 10);
+
+	//const char*c = LOCIT(5, 10);
+	
+	//printf(LOCIT(20,20) " !!!!!!!!!!!!!!!!");
+	//return 0;
 
 	int xx = 0;
 	int pos = 0;
