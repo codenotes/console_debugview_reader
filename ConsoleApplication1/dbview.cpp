@@ -325,10 +325,12 @@ int __cdecl main()
 
 	ANSI_Util term;
 	char temp[255];
-	term.StoreScrollingRegionLocation("scroll1", 2, 4 ); //4 lines, adding 1 because seems to be necessary
+	term.StoreScrollingRegionLocation("scroll1", 2, 5 ); //4 lines, adding 1 because seems to be necessary
 	term.SetScrollingRegion("scroll1");
+	term.AddLoc("loc1", 20, 1);
 
-	term.pushBuffString("scroll1", "one");
+
+	term.pushBuffString("scroll1", RED_DEF "one" RESET_DEF);
 	term.pushBuffString("scroll1", "two");
 	term.pushBuffString("scroll1", "three");
 	term.pushBuffString("scroll1", "four");
@@ -342,6 +344,7 @@ int __cdecl main()
 		{
 
 		case VK_LEFT:
+			term.PrintAtLoc("loc1", "hi there");
 			break;
 		case VK_UP:
 			term.ScrollUp("scroll1");// , ++pos);
