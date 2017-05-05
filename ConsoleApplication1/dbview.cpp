@@ -345,11 +345,14 @@ void getConsoleWidthAndHeight(int &columns, int&rows)
 //printf("\033[%d;%dH", L, N);
 
 
-
+int midiProbe();
+int testMidiIn();
 
 int __cdecl main()
 {
-
+	midiProbe();
+	testMidiIn();
+	return 0;
 	ANSI_Util term;
 
 	char temp[255];
