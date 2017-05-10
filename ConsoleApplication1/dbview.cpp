@@ -4,6 +4,9 @@
 
 #include <Windows.h>
 #include <stdio.h>
+#include "TlHelp32.h"
+#include <comutil.h>
+
 
 #define WINSIZE 6
 #define STARTING_LINE 2
@@ -341,26 +344,19 @@ void getConsoleWidthAndHeight(int &columns, int&rows)
 }
 
 
-
-//printf("\033[%d;%dH", L, N);
-
-
-int midiProbe();
-int testMidiIn();
-
-int __cdecl main()
+void midiTestStuffForMain()
 {
-	midiProbe();
-	testMidiIn();
-	return 0;
+//	midiProbe();
+	//testMidiIn();
+	
 	ANSI_Util term;
 
 	char temp[255];
-	term.StoreScrollingRegionLocation("scroll1", 2, 4 ); //4 lines, adding 1 because seems to be necessary
+	term.StoreScrollingRegionLocation("scroll1", 2, 4); //4 lines, adding 1 because seems to be necessary
 	term.SetScrollingRegion("scroll1");
 
 	term.drawHline(6);
-	term.drawVline(12, 0,7);
+	term.drawVline(12, 0, 7);
 
 	term.pushBuffString("scroll1", "one");
 	term.pushBuffString("scroll1", "two");
@@ -371,7 +367,7 @@ int __cdecl main()
 	term.CurPos(10, 10);
 
 	//const char*c = LOCIT(5, 10);
-	
+
 	//printf(LOCIT(20,20) " !!!!!!!!!!!!!!!!");
 	//return 0;
 
@@ -392,18 +388,25 @@ int __cdecl main()
 			break;
 		case VK_RIGHT:
 			sprintf(temp, "pushed:%d", xx++);
-			term.pushBuffString("scroll1",temp);
+			term.pushBuffString("scroll1", temp);
 
 			break;
 		}
 	}
 
+}
+
+//printf("\033[%d;%dH", L, N);
+
+
+void ANSITestStuff()
+{
 	//testANSI();
 
 	//printAndAvance(vec, 3, 1, 2);
 	//pushBuffString(vec, "six", 1, 2, true);
 
-	
+
 	//stest(vec, lpos);
 	//printf("\n");
 
@@ -416,13 +419,61 @@ int __cdecl main()
 	//au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "two");
 	//au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "three");
 	//au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "four");
-//	au2.FillScrollingRegion("scroll1");
+	//	au2.FillScrollingRegion("scroll1");
 	//au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::RED, "%s", "three");
 	//au2.ScrollDown("scroll1");
 	//au2.FillScrollingRegion("scroll1");
 	//au2.ScrollDown("scroll1");
 	//return 0;
-	return 0;
+}
+
+
+int midiProbe();
+int testMidiIn();
+
+#include <set>
+
+std::map<DWORD, bstr_t> procs;
+std::set<bstr_t> interestedProcs;
+
+
+#pragma comment(lib,"comsuppw.lib")
+
+
+void GatherProcessInformation()
+{
+
+	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hSnapshot) {
+		PROCESSENTRY32 pe32;
+		pe32.dwSize = sizeof(PROCESSENTRY32);
+		if (Process32First(hSnapshot, &pe32)) {
+			do
+			{
+				procs[pe32.th32ProcessID] = pe32.szExeFile;
+				//printf("pid %d %s\n", pe32.th32ProcessID, pe32.szExeFile);
+				printf("pid %d %s\n", pe32.th32ProcessID, (const char*) (procs[pe32.th32ProcessID] ));
+
+			} while (Process32Next(hSnapshot, &pe32));
+		}
+		CloseHandle(hSnapshot);
+	}
+}
+
+
+USE_GREG_PRINT_HANDLER
+USE_GREG_CONSOLE_HANDLER
+
+int __cdecl main()
+{
+	interestedProcs.insert("dunno.exe");
+
+	GatherProcessInformation();
+
+	ANSI_Util au;
+	printf(GREEN_DEF "started...\n" RESET_DEF);
+	//au.AddLoc("one", 10, 1);
+
 	DWORD dwLastError = ERROR_SUCCESS;
 
 	IfFalseRet(SetConsoleCtrlHandler((PHANDLER_ROUTINE)(CtrlHandler), TRUE) == TRUE);
@@ -461,10 +512,19 @@ int __cdecl main()
 		hFileMappingBuffer, SECTION_MAP_READ, 0, 0, 0));
 	IfFalseRet(pDbgBuffer);
 	int i = 0;
-	while (g_fContinue)
+	while (g_fContinue) //GREG2: reading from debugOutputString, ones own output console
 	{
 		if (WaitForSingleObject(hEventDataReady, 100) == WAIT_OBJECT_0)
 		{
+			//pDbgBuffer->dwProcessId
+			if (interestedProcs.count("dunno.exe"))
+			{
+
+				printf("%s", pDbgBuffer->abData);
+
+			}
+			SetEvent(hEventBufferReady);
+/*
 			au2.AppendScrollingRegion("scroll1", ANSI_Util::colors::BOLDCYAN, "%d", i++);// , (const char*)pDbgBuffer->abData);
 //			au2.PrintAtLoc("one", ANSI_Util::BOLDCYAN, "%s", (const char*)pDbgBuffer->abData);
 	//		au2.CurPos(20, 1);
@@ -475,6 +535,7 @@ int __cdecl main()
 //			au2.ScrollDown("scroll1");
 			au2.FillScrollingRegion("scroll1");
 			au2.ScrollDown("scroll1");
+			*/
 		}
 	}
 

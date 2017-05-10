@@ -229,7 +229,7 @@ void mycallback(double deltatime, std::vector< unsigned char > *message, void *u
 	if (nBytes > 0)
 		std::cout << "stamp = " << deltatime << std::endl;
 }
-
+//GREG2:rtMidi working example
 int testMidiIn()
 {
 	RtMidiIn *midiin = new RtMidiIn();
