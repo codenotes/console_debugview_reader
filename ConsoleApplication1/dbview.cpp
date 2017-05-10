@@ -466,7 +466,7 @@ USE_GREG_CONSOLE_HANDLER
 
 int __cdecl main()
 {
-	interestedProcs.insert("dunno.exe");
+	interestedProcs.insert("appSrcTestConsole.exe"); //what I am interested in
 
 	GatherProcessInformation();
 
@@ -512,12 +512,16 @@ int __cdecl main()
 		hFileMappingBuffer, SECTION_MAP_READ, 0, 0, 0));
 	IfFalseRet(pDbgBuffer);
 	int i = 0;
+	bstr_t bt;
+
 	while (g_fContinue) //GREG2: reading from debugOutputString, ones own output console
 	{
 		if (WaitForSingleObject(hEventDataReady, 100) == WAIT_OBJECT_0)
 		{
-			//pDbgBuffer->dwProcessId
-			if (interestedProcs.count("dunno.exe"))
+			
+			bt = procs[pDbgBuffer->dwProcessId];
+			
+			if (interestedProcs.count(bt))
 			{
 
 				printf("%s", pDbgBuffer->abData);
