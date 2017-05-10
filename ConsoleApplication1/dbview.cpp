@@ -464,7 +464,7 @@ void GatherProcessInformation()
 USE_GREG_PRINT_HANDLER
 USE_GREG_CONSOLE_HANDLER
 
-int __cdecl main()
+int __cdecl main_original()
 {
 	interestedProcs.insert("appSrcTestConsole.exe"); //what I am interested in
 

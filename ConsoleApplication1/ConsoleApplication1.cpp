@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 #include "rtmidi/RtMidi.h"
+#include "WinDebugMonitor.h"
 
 HANDLE hStdin;
 DWORD fdwSaveOldMode;
@@ -16,6 +17,81 @@ VOID ErrorExit(LPSTR);
 VOID KeyEventProc(KEY_EVENT_RECORD);
 VOID MouseEventProc(MOUSE_EVENT_RECORD);
 VOID ResizeEventProc(WINDOW_BUFFER_SIZE_RECORD);
+
+
+class MyMonitor :public CWinDebugMonitor
+{
+
+
+	virtual void OutputWinDebugString(const char *str) 
+	{
+	
+		printf("%s\n", str);
+
+	};
+};
+
+void mycallback(double deltatime, std::vector< unsigned char > *message, void *userData)
+{
+	unsigned int nBytes = message->size();
+	int val;
+	//byte 7 and 9
+//	val = (int)message->at(i);
+	if ((*message)[0] == 254) return;
+
+	//std::cout <<  (int)(*message)[8]<<":"<<(int)(*message)[8] << ":" << (int)(*message)[10] << std::endl;
+	
+	for (unsigned int i = 0; i < nBytes; i++)
+	{
+	
+		val = (*message)[i];
+		std::cout << i << ":" << val << " ";
+	}
+	std::cout << std::endl;
+//	if (nBytes > 0)
+//		std::cout << "stamp = " << deltatime << std::endl;
+}
+
+
+int testMidiIn()
+{
+	RtMidiIn *midiin = new RtMidiIn();
+	// Check available ports.
+	unsigned int nPorts = midiin->getPortCount();
+	if (nPorts == 0) {
+		std::cout << "No ports available!\n";
+		goto cleanup;
+	}
+	midiin->openPort(0);
+	// Set our callback function.  This should be done immediately after
+	// opening the port to avoid having incoming messages written to the
+	// queue.
+	midiin->setCallback(&mycallback);
+	// Don't ignore sysex, timing, or active sensing messages.
+	midiin->ignoreTypes(false, false, false);
+	std::cout << "\nReading MIDI input ... press <enter> to quit.\n";
+	char input;
+	std::cin.get(input);
+	// Clean up
+cleanup:
+	delete midiin;
+	return 0;
+}
+
+
+
+//GREG2:rtMidi working example
+
+
+int main()
+{
+//	MyMonitor m;
+	testMidiIn();
+
+	
+
+}
+
 
 int main2(VOID)
 {
@@ -221,36 +297,3 @@ int midiProbe()
 	
 }
 
-void mycallback(double deltatime, std::vector< unsigned char > *message, void *userData)
-{
-	unsigned int nBytes = message->size();
-	for (unsigned int i = 0; i < nBytes; i++)
-		std::cout << "Byte " << i << " = " << (int)message->at(i) << ", ";
-	if (nBytes > 0)
-		std::cout << "stamp = " << deltatime << std::endl;
-}
-//GREG2:rtMidi working example
-int testMidiIn()
-{
-	RtMidiIn *midiin = new RtMidiIn();
-	// Check available ports.
-	unsigned int nPorts = midiin->getPortCount();
-	if (nPorts == 0) {
-		std::cout << "No ports available!\n";
-		goto cleanup;
-	}
-	midiin->openPort(0);
-	// Set our callback function.  This should be done immediately after
-	// opening the port to avoid having incoming messages written to the
-	// queue.
-	midiin->setCallback(&mycallback);
-	// Don't ignore sysex, timing, or active sensing messages.
-	midiin->ignoreTypes(false, false, false);
-	std::cout << "\nReading MIDI input ... press <enter> to quit.\n";
-	char input;
-	std::cin.get(input);
-	// Clean up
-cleanup:
-	delete midiin;
-	return 0;
-}
