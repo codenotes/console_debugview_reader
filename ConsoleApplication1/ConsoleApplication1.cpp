@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #include "rtmidi/RtMidi.h"
-#include "WinDebugMonitor.h"
+#include "GregDebug/WinDebugMonitor.h"
 
 HANDLE hStdin;
 DWORD fdwSaveOldMode;
@@ -22,12 +22,19 @@ VOID ResizeEventProc(WINDOW_BUFFER_SIZE_RECORD);
 class MyMonitor :public CWinDebugMonitor
 {
 
+	MyMonitor()
+	{
+		GatherProcessInformation();
+		addInterestedProcs("something.exe");
+	}
 
-	virtual void OutputWinDebugString(const char *str) 
+	virtual void OutputWinDebugString(const char *str, DWORD dwProcessId)
 	{
 	
-		printf("%s\n", str);
-
+		if(isInterested(dwProcessId))
+		{
+			printf("%s\n", str);
+		}
 	};
 };
 
