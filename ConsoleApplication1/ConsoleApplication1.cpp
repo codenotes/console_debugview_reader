@@ -125,6 +125,7 @@ std::vector<string> ssr(std::string srch)
 
 	return l;
 }
+
 INIT_GREG_RETURN_HANDLER
 
 void retHand(const char* str, int loc)
