@@ -6,9 +6,11 @@
 
 #include <windows.h>
 #include <stdio.h>
-
+#include <vector>
 #include "rtmidi/RtMidi.h"
 #include "GregDebug/WinDebugMonitor.h"
+#include "everything/Everything.h"
+#include "Boost/filesystem.hpp"
 
 HANDLE hStdin;
 DWORD fdwSaveOldMode;
@@ -85,18 +87,80 @@ cleanup:
 	return 0;
 }
 
+using namespace std;
 
 
 //GREG2:rtMidi working example
+#pragma comment(lib,"everything64.lib")
 
+std::vector<string> ssr(std::string srch)
+{
+	Everything_SetSearchA(srch.c_str());
+	Everything_QueryA(TRUE);
+	std::vector<string> l;
+
+	std::string s;
+	char temp[1024];
+
+	auto num = Everything_GetNumResults();
+	{
+		DWORD i;
+
+		for (i = 0; i < num; i++)
+		{
+
+			//s = Everything_GetResultPathA(i);
+			Everything_GetResultFullPathNameA(i, temp, 1024);
+			boost::filesystem::path p(temp);
+			//	s = temp;
+			//s += Everything_GetResultFileNameW(i);
+			l.push_back(p.filename().generic_string());
+
+			//l.append(temp);
+			//printf("%S\n", Everything_GetResultPathA(i));
+			//printf("%S\n", Everything_GetResultFileNameW(i));
+		}
+	}
+	//printf("\nnum:%d\n", num);
+
+	return l;
+}
+INIT_GREG_RETURN_HANDLER
+
+void retHand(const char* str, int loc)
+{ 
+	//ANSI_Util::colors cl = GREEN_ANSI;
+	ANSI_Util::PrintAtLoc(22,1,GREEN_DEF,"%s,loc:%d\n", str, loc);
+
+}
 
 int main()
 {
+	ANSI_Util au2;
+	au2.AddLoc("input", 15, 1);
+	au2.StoreScrollingRegionLocation("s1",1,10);
+
+	ADD_GREG_RETURN_HANDLER(retHand);
 //	MyMonitor m;
-	testMidiIn();
+	//testMidiIn();
 
-	
+	auto l = ssr("testinge");
 
+	for (auto x : l)
+	{
+		au2.AppendScrollingRegion("s1",x);
+	}
+
+	//au2.PrintAtLoc("input", "test");
+	au2.getInputAtLocation("input");
+
+	while (1)
+	{
+
+
+		au2.GetPressedKey(true);
+
+	}
 }
 
 

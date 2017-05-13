@@ -436,7 +436,7 @@ void testANSI()
 	while (1)
 	{
 
-		au.GetInputAtLocation("input", temp, 25);
+		au.GetInputSimpleAtLocation("input", temp, 25);
 
 		au.PrintAtLoc("within_scroll", ANSI_Util::BOLDCYAN, "In scroll region\n");
 		au.ScrollDown("scroll1", 1);
