@@ -93,7 +93,7 @@ using namespace std;
 //GREG2:rtMidi working example
 #pragma comment(lib,"everything64.lib")
 
-std::vector<string> ssr(std::string srch)
+std::vector<string> ssr(std::string srch, int max)
 {
 	Everything_SetSearchA(srch.c_str());
 	Everything_QueryA(TRUE);
@@ -103,10 +103,11 @@ std::vector<string> ssr(std::string srch)
 	char temp[1024];
 
 	auto num = Everything_GetNumResults();
+
 	{
 		DWORD i;
 
-		for (i = 0; i < num; i++)
+		for (i = 0; i < max; i++)
 		{
 
 			//s = Everything_GetResultPathA(i);
@@ -114,8 +115,8 @@ std::vector<string> ssr(std::string srch)
 			boost::filesystem::path p(temp);
 			//	s = temp;
 			//s += Everything_GetResultFileNameW(i);
-			l.push_back(p.filename().generic_string());
-
+			//l.push_back(p.filename().generic_string());
+			l.push_back(p.generic_string());
 			//l.append(temp);
 			//printf("%S\n", Everything_GetResultPathA(i));
 			//printf("%S\n", Everything_GetResultFileNameW(i));
@@ -127,39 +128,48 @@ std::vector<string> ssr(std::string srch)
 }
 
 INIT_GREG_RETURN_HANDLER
+ANSI_Util con1;
 
-void retHand(const char* str, int loc)
+void retHand(const char* str, int loc, DWORD modifier)
 { 
 	//ANSI_Util::colors cl = GREEN_ANSI;
 	ANSI_Util::PrintAtLoc(22,1,GREEN_DEF,"%s,loc:%d\n", str, loc);
+
+	con1.clearScollingRegion("s1");
+
+	auto l = ssr(str,50);
+
+	int i = 1;
+
+	for (auto &x : l)
+	{
+		x=GREEN_DEF + std::to_string(i++) + ":"+RESET_DEF+x;
+		con1.AppendScrollingRegion("s1", x);
+	}
+
+
 
 }
 
 int main()
 {
-	ANSI_Util au2;
-	au2.AddLoc("input", 15, 1);
-	au2.StoreScrollingRegionLocation("s1",1,10);
+//	ANSI_Util au2;
 
+	con1.AddLoc("input", 15, 1);
+	con1.StoreScrollingRegionLocation("s1",1,10);
+	printf("\x1b\[7l");
 	ADD_GREG_RETURN_HANDLER(retHand);
 //	MyMonitor m;
 	//testMidiIn();
 
-	auto l = ssr("testinge");
-
-	for (auto x : l)
-	{
-		au2.AppendScrollingRegion("s1",x);
-	}
-
 	//au2.PrintAtLoc("input", "test");
-	au2.getInputAtLocation("input");
+	con1.getInputAtLocation("input");
 
 	while (1)
 	{
 
 
-		au2.GetPressedKey(true);
+		con1.GetPressedKey(true);
 
 	}
 }
