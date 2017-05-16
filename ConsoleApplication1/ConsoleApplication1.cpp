@@ -11,6 +11,7 @@
 #include "GregDebug/WinDebugMonitor.h"
 #include "everything/Everything.h"
 #include "Boost/filesystem.hpp"
+#include "gregswitch.h"
 
 HANDLE hStdin;
 DWORD fdwSaveOldMode;
@@ -130,22 +131,37 @@ std::vector<string> ssr(std::string srch, int max)
 INIT_GREG_RETURN_HANDLER
 ANSI_Util con1;
 
+
+INIT_GREGSWITCH
 void retHand(const char* str, int loc, DWORD modifier)
 { 
-	//ANSI_Util::colors cl = GREEN_ANSI;
-	ANSI_Util::PrintAtLoc(22,1,GREEN_DEF,"%s,loc:%d\n", str, loc);
 
-	con1.clearScollingRegion("s1");
-
-	auto l = ssr(str,50);
-
-	int i = 1;
-
-	for (auto &x : l)
+	GREGCASE(DIR)
 	{
-		x=GREEN_DEF + std::to_string(i++) + ":"+RESET_DEF+x;
-		con1.AppendScrollingRegion("s1", x);
-	}
+		ANSI_Util::PrintAtLoc(22, 1, GREEN_DEF, "%s,loc:%d\n", str, loc);
+
+		con1.clearScollingRegion("s1");
+
+		auto l = ssr(str, 50);
+
+		int i = 1;
+
+		for (auto &x : l)
+		{
+			x = GREEN_DEF + std::to_string(i++) + ":" + RESET_DEF + x;
+			con1.AppendScrollingRegion("s1", x);
+		}
+	};
+
+	GREGADDCASE("dir", DIR);
+
+	GREGSWITCH(str);
+
+
+
+
+	//ANSI_Util::colors cl = GREEN_ANSI;
+	
 
 
 
@@ -154,10 +170,12 @@ void retHand(const char* str, int loc, DWORD modifier)
 int main()
 {
 //	ANSI_Util au2;
-
+	con1.resize(40, 80);
 	con1.AddLoc("input", 15, 1);
 	con1.StoreScrollingRegionLocation("s1",1,10);
-	printf("\x1b\[7l");
+	printf(NO_WRAP);
+
+
 	ADD_GREG_RETURN_HANDLER(retHand);
 //	MyMonitor m;
 	//testMidiIn();
