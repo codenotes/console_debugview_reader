@@ -142,7 +142,9 @@ void retHand(const char* str, int loc, DWORD modifier)
 
 		con1.clearScollingRegion("s1");
 
-		auto l = ssr(str, 50);
+		auto args=GREG_GET_AFTER_COMMAND(str);
+
+		auto l = ssr(args, 50);
 
 		int i = 1;
 
@@ -155,7 +157,7 @@ void retHand(const char* str, int loc, DWORD modifier)
 
 	GREGADDCASE("dir", DIR);
 
-	GREGSWITCH(str);
+	GREGSWITCH_IF_BEGIN_MATCHES(str);
 
 
 
